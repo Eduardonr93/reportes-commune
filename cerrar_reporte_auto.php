@@ -2,8 +2,8 @@
 // cerrar_reporte_auto.php - Cierra un reporte automáticamente (llamado por el bot)
 header('Content-Type: text/plain');
 
-$host = "localhost"; $user = "thenetgu_reportes";
-$pass = "thenetgu_reportes"; $db = "thenetgu_reportes";
+$host = "localhost"; $user = "commune_reportes";
+$pass = "ComuneReportes2026"; $db = "commune_reportes";
 $conn = new mysqli($host, $user, $pass, $db);
 $conn->set_charset("utf8mb4");
 

@@ -2,8 +2,8 @@
 // verificar_nuevos_reports.php - API para notificaciones sin recargar
 header('Content-Type: application/json');
 
-$host = "localhost"; $user = "thenetgu_reportes";
-$pass = "thenetgu_reportes"; $db = "thenetgu_reportes";
+$host = "localhost"; $user = "commune_reportes";
+$pass = "ComuneReportes2026"; $db = "commune_reportes";
 $conn = new mysqli($host,$user,$pass,$db);
 $conn->set_charset("utf8mb4");
 

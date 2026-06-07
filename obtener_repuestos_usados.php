@@ -4,9 +4,9 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
 $host = "localhost"; 
-$user = "thenetgu_reportes";
-$pass = "thenetgu_reportes"; 
-$db = "thenetgu_reportes";
+$user = "commune_reportes";
+$pass = "ComuneReportes2026"; 
+$db = "commune_reportes";
 
 $conn = new mysqli($host, $user, $pass, $db);
 $conn->set_charset("utf8mb4");

@@ -1,8 +1,8 @@
 <?php
 $host = "localhost";
-$user = "thenetgu_reportes";
-$pass = "thenetgu_reportes";
-$db   = "thenetgu_reportes";
+$user = "commune_reportes";
+$pass = "ComuneReportes2026";
+$db   = "ComuneReportes2026";
 
 $conn = new mysqli($host, $user, $pass, $db);
 $conn->set_charset("utf8mb4");

@@ -1,8 +1,9 @@
 <?php
 // ── DB ────────────────────────────────────────────────────
-$host = "localhost"; $user = "thenetgu_reportes";
-$pass = "thenetgu_reportes"; $db = "thenetgu_reportes";
-$conn = new mysqli($host,$user,$pass,$db);
+//$host = "localhost"; $user = "thenetgu_reportes";
+//$pass = "thenetgu_reportes"; $db = "thenetgu_reportes";
+require_once __DIR__ . '/config.php';
+$conn = getDB();
 $conn->set_charset("utf8mb4");
 if($conn->connect_error) die("Error: ".$conn->connect_error);
 
@@ -17,13 +18,6 @@ $perms = $roles[$rol_activo]['perms'];
 function can($p){ global $perms; return in_array($p,$perms); }
 
 // ── Columnas opcionales ───────────────────────────────────
-@$conn->query("ALTER TABLE reportes ADD COLUMN IF NOT EXISTS prioridad VARCHAR(20) DEFAULT 'Normal'");
-@$conn->query("ALTER TABLE reportes ADD COLUMN IF NOT EXISTS tecnico_asignado VARCHAR(100) DEFAULT ''");
-@$conn->query("ALTER TABLE reportes ADD COLUMN IF NOT EXISTS tiempo_trabajado INT DEFAULT 0");
-@$conn->query("ALTER TABLE reportes ADD COLUMN IF NOT EXISTS hora_inicio_trabajo DATETIME DEFAULT NULL");
-@$conn->query("ALTER TABLE reportes ADD COLUMN IF NOT EXISTS residencial VARCHAR(50) DEFAULT ''");
-@$conn->query("ALTER TABLE reportes ADD COLUMN IF NOT EXISTS nivel_urgencia ENUM('Nivel 1', 'Nivel 2', 'Nivel 3') DEFAULT NULL");
-@$conn->query("ALTER TABLE reportes ADD COLUMN IF NOT EXISTS tipo_reporte ENUM('Incidencia', 'Preventivo', 'Mantenimiento') DEFAULT 'Incidencia'");
 
 // ── Config alertas ────────────────────────────────────────
 $cfg_file = __DIR__.'/alertas_config.json';
