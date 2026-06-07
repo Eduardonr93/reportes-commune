@@ -1,8 +1,8 @@
 // sw.js — Service Worker Commune Gestión Cancún
-const CACHE_NAME = 'commune-v1';
+const CACHE_NAME = 'commune-v2';
 const STATIC_ASSETS = [
-  '/index.php',
-  '/manifest.json',
+  '/reportes/index.php',
+  '/reportes/manifest.json',
   'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap'
 ];
 
@@ -86,7 +86,7 @@ self.addEventListener('push', e => {
       tag:     'commune-notif',
       renotify: true,
       actions: [{ action: 'open', title: 'Ver panel' }],
-      data:    { url: data.url || '/index.php' }
+      data:    { url: data.url || '/reportes/index.php' }
     })
   );
 });
@@ -94,7 +94,7 @@ self.addEventListener('push', e => {
 // ── Click en notificación ─────────────────────────────────
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const target = e.notification.data?.url || '/index.php';
+  const target = e.notification.data?.url || '/reportes/index.php';
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
       const match = cs.find(c => c.url.includes(target) && 'focus' in c);
