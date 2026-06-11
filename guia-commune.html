@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de Reportes — Commune</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0a0a0f;
+  --ink2: #1c1c2e;
+  --paper: #f5f3ee;
+  --paper2: #ede9e0;
+  --amber: #e8900a;
+  --amber2: #f5a623;
+  --amber-pale: #fef3dc;
+  --red: #c0392b;
+  --red-pale: #fdecea;
+  --blue: #1a56db;
+  --blue-pale: #e8f0fd;
+  --green: #16a34a;
+  --green-pale: #dcfce7;
+  --border: #d4cfc5;
+  --r: 6px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── PRINT ── */
+@media print {
+  body { background: white; }
+  .page { box-shadow: none; margin: 0; border-radius: 0; }
+  .no-print { display: none; }
+  @page { margin: 10mm; size: A4; }
+}
+
+/* ── PAGE ── */
+.page {
+  max-width: 800px;
+  margin: 20px auto;
+  background: white;
+  box-shadow: 0 4px 40px rgba(0,0,0,.12);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--ink);
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.header-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  color: white;
+  letter-spacing: .05em;
+  line-height: 1;
+}
+.header-logo span { color: var(--amber2); }
+.header-title {
+  text-align: right;
+}
+.header-title h1 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--amber2);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+}
+.header-title p {
+  font-size: 11px;
+  color: rgba(255,255,255,.5);
+  font-family: 'DM Mono', monospace;
+  margin-top: 3px;
+}
+
+/* ── ALERT BANNER ── */
+.alert-banner {
+  background: var(--amber);
+  padding: 10px 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.alert-banner span {
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.alert-dot {
+  width: 8px; height: 8px;
+  background: white;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ── BODY ── */
+.body { padding: 28px 32px; }
+
+/* ── SECTION ── */
+.section { margin-bottom: 24px; }
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── REGLA DE ORO ── */
+.gold-rule {
+  background: var(--ink);
+  border-radius: var(--r);
+  padding: 18px 22px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.gold-rule-title {
+  grid-column: 1/-1;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  color: var(--amber2);
+  letter-spacing: .05em;
+  margin-bottom: 4px;
+}
+.rule-item {
+  background: rgba(255,255,255,.06);
+  border-radius: 4px;
+  padding: 10px 14px;
+  border-left: 3px solid;
+}
+.rule-ok { border-color: #22c55e; }
+.rule-no { border-color: var(--red); }
+.rule-item .ri-label {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.rule-ok .ri-label { color: #22c55e; }
+.rule-no .ri-label { color: #f87171; }
+.rule-item p { font-size: 12px; color: rgba(255,255,255,.8); }
+.rule-item strong { color: white; }
+
+/* ── EXCEPCIÓN ── */
+.excepcion {
+  background: var(--blue-pale);
+  border: 1px solid #bfdbfe;
+  border-radius: var(--r);
+  padding: 14px 18px;
+}
+.excepcion-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.excepcion-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.exc-item {
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: 4px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.exc-ok { background: var(--green-pale); color: #15803d; }
+.exc-no { background: var(--red-pale); color: var(--red); }
+.exc-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── PLANTILLA ── */
+.plantilla {
+  background: var(--paper2);
+  border: 2px dashed var(--border);
+  border-radius: var(--r);
+  padding: 18px 22px;
+}
+.plantilla-header {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: .08em;
+  color: var(--ink2);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.plantilla-copy {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--amber);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.campo-list { display: flex; flex-direction: column; gap: 6px; }
+.campo {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: white;
+  border: 1px solid var(--border);
+}
+.campo.obligatorio { border-left: 3px solid var(--amber); }
+.campo-emoji { font-size: 16px; flex-shrink: 0; width: 22px; text-align: center; }
+.campo-content { flex: 1; }
+.campo-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.campo-hint {
+  font-size: 11px;
+  color: #888;
+  font-family: 'DM Mono', monospace;
+  margin-top: 2px;
+}
+.campo-tag {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  background: var(--amber-pale);
+  color: var(--amber);
+  border: 1px solid #f0d080;
+  padding: 2px 6px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ── NIVELES ── */
+.niveles-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.nivel {
+  border-radius: var(--r);
+  padding: 14px 16px;
+  border: 1px solid;
+  position: relative;
+  overflow: hidden;
+}
+.nivel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.nivel-1 { background: var(--red-pale); border-color: #fca5a5; }
+.nivel-1::before { background: var(--red); }
+.nivel-2 { background: #fff8ed; border-color: #fed7aa; }
+.nivel-2::before { background: var(--amber); }
+.nivel-3 { background: var(--blue-pale); border-color: #bfdbfe; }
+.nivel-3::before { background: var(--blue); }
+.nivel-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.nivel-1 .nivel-badge { color: var(--red); }
+.nivel-2 .nivel-badge { color: #b45309; }
+.nivel-3 .nivel-badge { color: var(--blue); }
+.nivel-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.nivel-examples { font-size: 11px; color: #555; line-height: 1.6; }
+.nivel-examples li { list-style: none; padding-left: 12px; position: relative; }
+.nivel-examples li::before { content: '—'; position: absolute; left: 0; color: #aaa; }
+
+/* ── EQUIPOS ── */
+.equipos-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.equipo-tag {
+  background: var(--paper2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--ink2);
+  text-align: center;
+}
+
+/* ── CAMBIO TURNO ── */
+.turno-box {
+  background: var(--ink2);
+  border-radius: var(--r);
+  padding: 16px 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.turno-icon { font-size: 28px; flex-shrink: 0; }
+.turno-content h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 6px;
+}
+.turno-content p { font-size: 12px; color: rgba(255,255,255,.7); line-height: 1.6; }
+.turno-cmd {
+  display: inline-block;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  color: var(--amber2);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  margin-top: 8px;
+  letter-spacing: .05em;
+}
+
+/* ── EJEMPLO ── */
+.ejemplo-box {
+  background: var(--paper2);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.ejemplo-header {
+  background: var(--paper2);
+  padding: 8px 14px;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .1em;
+  color: #888;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ejemplo-dot { width: 8px; height: 8px; border-radius: 50%; }
+.ejemplo-body {
+  padding: 14px 18px;
+  font-size: 13px;
+  line-height: 1.9;
+  font-family: 'DM Mono', monospace;
+  color: var(--ink2);
+  white-space: pre-wrap;
+}
+.ejemplo-body .hl { color: var(--amber); font-weight: 500; }
+
+/* ── OBLIGATORIOS ── */
+.oblig-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.oblig-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--green-pale);
+  border: 1px solid #bbf7d0;
+  border-radius: var(--r);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #15803d;
+}
+.oblig-emoji { font-size: 16px; }
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+/* ── FOOTER ── */
+.footer {
+  background: var(--paper2);
+  border-top: 1px solid var(--border);
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-left {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #aaa;
+  letter-spacing: .1em;
+}
+.footer-right {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #aaa;
+}
+
+/* ── PRINT BUTTON ── */
+.print-btn {
+  display: block;
+  margin: 16px auto;
+  padding: 10px 28px;
+  background: var(--ink);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: .03em;
+}
+.print-btn:hover { background: var(--amber); }
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px) {
+  .body { padding: 20px 16px; }
+  .header { padding: 20px 16px; }
+  .gold-rule { grid-template-columns: 1fr; }
+  .niveles-grid { grid-template-columns: 1fr; }
+  .equipos-grid { grid-template-columns: repeat(2,1fr); }
+  .oblig-grid { grid-template-columns: repeat(2,1fr); }
+  .excepcion-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="header-logo">commune<span>.</span></div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:'DM Mono',monospace;margin-top:4px;letter-spacing:.08em">SISTEMA DE GESTIÓN</div>
+    </div>
+    <div class="header-title">
+      <h1>Guía de Reportes</h1>
+      <p>Para encargados de seguridad</p>
+    </div>
+  </div>
+
+  <!-- ALERT -->
+  <div class="alert-banner">
+    <div class="alert-dot"></div>
+    <span>Lee esta guía completa antes de enviar tu primer reporte</span>
+  </div>
+
+  <div class="body">
+
+    <!-- REGLA DE ORO -->
+    <div class="section">
+      <div class="section-label">Regla principal</div>
+      <div class="gold-rule">
+        <div class="gold-rule-title">📌 UN REPORTE = UNA FALLA = UN EQUIPO</div>
+        <div class="rule-item rule-ok">
+          <div class="ri-label">✅ Correcto</div>
+          <p><strong>1 cámara dañada</strong> → Enviar 1 reporte con esa cámara específica.</p>
+        </div>
+        <div class="rule-item rule-no">
+          <div class="ri-label">❌ Incorrecto</div>
+          <p><strong>5 cámaras dañadas</strong> → No enviar todo en un solo mensaje. Son 5 reportes separados.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXCEPCIÓN -->
+    <div class="section">
+      <div class="section-label">Excepción permitida</div>
+      <div class="excepcion">
+        <div class="excepcion-title">⚠️ Solo para cámaras de la misma zona</div>
+        <div class="excepcion-grid">
+          <div class="exc-item exc-ok">
+            <span class="exc-icon">✅</span>
+            <span><strong>Válido:</strong> "Las 4 cámaras del estacionamiento norte fallaron al mismo tiempo"</span>
+          </div>
+          <div class="exc-item exc-no">
+            <span class="exc-icon">❌</span>
+            <span><strong>Inválido:</strong> "Cámaras 2, 5 y 8 del perímetro" — son zonas distintas, van separadas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- PLANTILLA -->
+    <div class="section">
+      <div class="section-label">Plantilla obligatoria</div>
+      <div class="plantilla">
+        <div class="plantilla-header">
+          🔧 FORMATO DE REPORTE
+          <span class="plantilla-copy">Copia y pega en el grupo</span>
+        </div>
+        <div class="campo-list">
+          <div class="campo obligatorio">
+            <span class="campo-emoji">📍</span>
+            <div class="campo-content">
+              <div class="campo-name">Residencial</div>
+              <div class="campo-hint">RIO / Cumbres / Via Cumbres / Aqua / Palmaris / Arbolada / Altai / Kyra / Monte Athos</div>
+            </div>
+            <span class="campo-tag">Obligatorio</span>
+          </div>
+          <div class="campo obligatorio">
+            <span class="campo-emoji">📂</span>
+            <div class="campo-content">
+              <div class="campo-name">Categoría</div>
+              <div class="campo-hint">Accesos / CCTV / Perímetro / Alarma / Redes / General</div>
+            </div>
+            <span class="campo-tag">Obligatorio</span>
+          </div>
+          <div class="campo obligatorio">
+            <span class="campo-emoji">🔩</span>
+            <div class="campo-content">
+              <div class="campo-name">Equipo</div>
+              <div class="campo-hint">Nombre específico del equipo: barrera CAME GT4 / cámara Hikvision / lector Nedap / router Ruijie...</div>
+            </div>
+            <span class="campo-tag">Obligatorio</span>
+          </div>
+          <div class="campo obligatorio">
+            <span class="campo-emoji">🗺️</span>
+            <div class="campo-content">
+              <div class="campo-name">Ubicación</div>
+              <div class="campo-hint">Caseta 1 entrada / Zona norte / Cámara 4 perímetro / Acceso peatonal</div>
+            </div>
+            <span class="campo-tag">Obligatorio</span>
+          </div>
+          <div class="campo">
+            <span class="campo-emoji">📋</span>
+            <div class="campo-content">
+              <div class="campo-name">Tipo</div>
+              <div class="campo-hint">Incidencia / Mantenimiento / Preventivo</div>
+            </div>
+          </div>
+          <div class="campo obligatorio">
+            <span class="campo-emoji">🚨</span>
+            <div class="campo-content">
+              <div class="campo-name">Urgencia</div>
+              <div class="campo-hint">Nivel 1 - Crítico / Nivel 2 - Moderado / Nivel 3 - Leve</div>
+            </div>
+            <span class="campo-tag">Obligatorio</span>
+          </div>
+          <div class="campo obligatorio">
+            <span class="campo-emoji">📝</span>
+            <div class="campo-content">
+              <div class="campo-name">Descripción</div>
+              <div class="campo-hint">Qué pasó exactamente, síntoma observado, desde cuándo</div>
+            </div>
+            <span class="campo-tag">Obligatorio</span>
+          </div>
+          <div class="campo obligatorio">
+            <span class="campo-emoji">👤</span>
+            <div class="campo-content">
+              <div class="campo-name">Reporta</div>
+              <div class="campo-hint">Tu nombre completo y cargo</div>
+            </div>
+            <span class="campo-tag">Obligatorio</span>
+          </div>
+          <div class="campo obligatorio">
+            <span class="campo-emoji">📸</span>
+            <div class="campo-content">
+              <div class="campo-name">Foto del equipo afectado</div>
+              <div class="campo-hint">Adjunta una foto al mismo mensaje. Sin foto el reporte puede procesarse con menor prioridad.</div>
+            </div>
+            <span class="campo-tag">Obligatorio</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EJEMPLO -->
+    <div class="section">
+      <div class="section-label">Ejemplo de reporte correcto</div>
+      <div class="ejemplo-box">
+        <div class="ejemplo-header">
+          <div class="ejemplo-dot" style="background:#22c55e"></div>
+          Mensaje de WhatsApp al grupo
+        </div>
+        <div class="ejemplo-body"><span class="hl">🔧 REPORTE</span>
+<span class="hl">📍 Residencial:</span> Via Cumbres
+<span class="hl">📂 Categoría:</span> Accesos
+<span class="hl">🔩 Equipo:</span> Barrera CAME GT4 — caseta 1
+<span class="hl">🗺️ Ubicación:</span> Caseta 1, pluma de salida de residentes
+<span class="hl">📋 Tipo:</span> Incidencia
+<span class="hl">🚨 Urgencia:</span> Nivel 2 - Moderado
+<span class="hl">📝 Descripción:</span> La pluma de salida tarda 8-10 segundos en abrirse con el tag. La entrada funciona normal.
+<span class="hl">👤 Reporta:</span> Jaime Javadores, Supervisor
+📸 [foto adjunta]</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- NIVELES -->
+    <div class="section">
+      <div class="section-label">Niveles de urgencia</div>
+      <div class="niveles-grid">
+        <div class="nivel nivel-1">
+          <div class="nivel-badge">🚨 Nivel 1 — Crítico</div>
+          <div class="nivel-title">Sistema fuera de servicio</div>
+          <ul class="nivel-examples">
+            <li>Barrera bloqueada, no abre ni cierra</li>
+            <li>Todas las cámaras sin imagen</li>
+            <li>Alarma activa sin respuesta</li>
+            <li>Sin acceso a residencial</li>
+            <li>Cerco eléctrico cortado</li>
+          </ul>
+        </div>
+        <div class="nivel nivel-2">
+          <div class="nivel-badge">⚠️ Nivel 2 — Moderado</div>
+          <div class="nivel-title">Falla parcial, sigue operando</div>
+          <ul class="nivel-examples">
+            <li>Pluma con apertura lenta</li>
+            <li>1-2 cámaras sin imagen</li>
+            <li>Lector intermitente</li>
+            <li>Imagen borrosa o pixelada</li>
+            <li>Internet con cortes frecuentes</li>
+          </ul>
+        </div>
+        <div class="nivel nivel-3">
+          <div class="nivel-badge">🔵 Nivel 3 — Leve</div>
+          <div class="nivel-title">Falla menor, sin urgencia</div>
+          <ul class="nivel-examples">
+            <li>Ajuste de ángulo de cámara</li>
+            <li>Limpieza de lente</li>
+            <li>Revisión preventiva programada</li>
+            <li>Tornillo suelto en barrera</li>
+            <li>Etiqueta dañada de equipo</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- EQUIPOS -->
+    <div class="section">
+      <div class="section-label">Equipos válidos para el campo 🔩 Equipo</div>
+      <div class="equipos-grid">
+        <div class="equipo-tag">barrera / pluma</div>
+        <div class="equipo-tag">cámara IP</div>
+        <div class="equipo-tag">cerco eléctrico</div>
+        <div class="equipo-tag">lector de tags</div>
+        <div class="equipo-tag">botonera</div>
+        <div class="equipo-tag">controlador</div>
+        <div class="equipo-tag">DVR / NVR</div>
+        <div class="equipo-tag">router / switch</div>
+        <div class="equipo-tag">sensor alarma</div>
+        <div class="equipo-tag">panel alarma</div>
+        <div class="equipo-tag">UPS / fuente</div>
+        <div class="equipo-tag">cableado / fibra</div>
+      </div>
+      <p style="font-size:11px;color:#888;margin-top:8px;font-family:'DM Mono',monospace">
+        💡 Agrega marca y modelo si lo conoces: "barrera CAME GT4", "cámara Hikvision DS-2CD2143"
+      </p>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- CAMBIO DE TURNO -->
+    <div class="section">
+      <div class="section-label">Cambio de turno</div>
+      <div class="turno-box">
+        <div class="turno-icon">🔄</div>
+        <div class="turno-content">
+          <h3>¿La falla sigue sin atenderse cuando entras a tu turno?</h3>
+          <p>NO vuelvas a reportarla. Ya está registrada en el sistema.<br>
+          Para consultar su estado actual, escribe en el grupo:</p>
+          <div class="turno-cmd">!estado #123</div>
+          <p style="margin-top:8px">El bot responderá con el estado, técnico asignado y avances. Reemplaza 123 con el número de reporte.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- OBLIGATORIOS -->
+    <div class="section">
+      <div class="section-label">Resumen — Campos obligatorios</div>
+      <div class="oblig-grid">
+        <div class="oblig-item"><span class="oblig-emoji">🔩</span> Equipo específico</div>
+        <div class="oblig-item"><span class="oblig-emoji">📍</span> Residencial</div>
+        <div class="oblig-item"><span class="oblig-emoji">📂</span> Categoría</div>
+        <div class="oblig-item"><span class="oblig-emoji">🗺️</span> Ubicación</div>
+        <div class="oblig-item"><span class="oblig-emoji">🚨</span> Urgencia</div>
+        <div class="oblig-item"><span class="oblig-emoji">📝</span> Descripción</div>
+        <div class="oblig-item"><span class="oblig-emoji">👤</span> Nombre y cargo</div>
+        <div class="oblig-item"><span class="oblig-emoji">📸</span> Foto adjunta</div>
+        <div class="oblig-item" style="background:#fff8ed;border-color:#fed7aa;color:#92400e">
+          <span class="oblig-emoji">⚠️</span> Sin equipo = rechazado
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-left">COMMUNE · SISTEMA DE GESTIÓN CANCÚN · v3.0</div>
+    <div class="footer-right">crm.commune.com.mx</div>
+  </div>
+
+</div>
+
+<button class="print-btn no-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+
+</body>
+</html>

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . "/auth.php";
+requireLogin();
 // ── DB ────────────────────────────────────────────────────
 //$host = "localhost"; $user = "thenetgu_reportes";
 //$pass = "thenetgu_reportes"; $db = "thenetgu_reportes";
@@ -221,6 +223,14 @@ $titulo_residencial = $f_residencial ? " - " . $f_residencial : "";
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<script>
+// Aplicar tema ANTES de renderizar para evitar flash
+(function(){
+  var t=localStorage.getItem('commune_theme');
+  var d=window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if(t==='dark'||(t===null&&d)) document.documentElement.setAttribute('data-theme','dark');
+})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=yes">
 <meta name="theme-color" content="#2563eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -246,6 +256,33 @@ $titulo_residencial = $f_residencial ? " - " . $f_residencial : "";
   --sh-md:0 4px 16px rgba(15,23,42,.08),0 16px 40px rgba(15,23,42,.06);
   --r:12px;--r-sm:8px;
 }
+
+[data-theme="dark"]{
+  --bg:#0f0f11;--bg2:#1a1a1f;--bg3:#242429;--bg4:#2e2e35;
+  --text:#f8fafc;--text2:#cbd5e1;--text3:#94a3b8;
+  --border:#3a3a45;--sh:0 1px 4px rgba(0,0,0,.5);
+  --accent:#60a5fa;--accent-l:rgba(96,165,250,.18);
+  --success:#4ade80;--success-l:rgba(74,222,128,.15);
+  --red:#f87171;--red-l:rgba(248,113,113,.15);
+  --r:10px;--r-sm:7px;
+}
+[data-theme="dark"] body{color:var(--text)}
+[data-theme="dark"] .sidebar{background:var(--bg2);border-color:var(--border)}
+[data-theme="dark"] .sb-item{color:var(--text2)}
+[data-theme="dark"] .sb-item:hover,[data-theme="dark"] .sb-item.on{background:var(--bg3);color:var(--text)}
+[data-theme="dark"] .topbar{background:var(--bg2);border-color:var(--border)}
+[data-theme="dark"] .card{background:var(--bg2);border-color:var(--border)}
+[data-theme="dark"] .fv{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+[data-theme="dark"] .fs,.modal [data-theme="dark"] select{background:var(--bg3);color:var(--text);border-color:var(--border)}
+[data-theme="dark"] input,[data-theme="dark"] textarea,[data-theme="dark"] select{background:var(--bg3);color:var(--text);border-color:var(--border)}
+[data-theme="dark"] .tabla td,[data-theme="dark"] .tabla th{border-color:var(--border);color:var(--text2)}
+[data-theme="dark"] .tabla tr:hover td{background:var(--bg3)}
+[data-theme="dark"] .modal{background:var(--bg2);color:var(--text)}
+[data-theme="dark"] .ov{background:rgba(0,0,0,.7)}
+
+.theme-toggle{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+.theme-toggle:hover{background:var(--bg4);}
+
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;-webkit-tap-highlight-color:transparent}
 .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 12px;min-height:58px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:100;box-shadow:var(--sh);flex-wrap:wrap}
@@ -417,9 +454,10 @@ canvas{max-height:200px;width:100%}
     <div class="tb-right">
         <span class="pill pill-live"><span class="live-dot"></span>En vivo</span>
         <span class="pill pill-clock" id="clock">--:--</span>
-        <a href="?vista=cards&<?php echo http_build_query(['vista'=>'cards', 'f_residencial'=>$f_residencial]); ?>" class="tb-btn <?php echo $vista==='cards'?'on':'';?>">📇</a>
-        <a href="?vista=tabla&<?php echo http_build_query(['vista'=>'tabla', 'f_residencial'=>$f_residencial]); ?>" class="tb-btn <?php echo $vista==='tabla'?'on':'';?>">📋</a>
-        <a href="?<?php echo http_build_query(array_merge($_GET,['export'=>'csv']));?>" class="tb-btn">⬇</a>
+        <a href="?<?php echo http_build_query(['vista'=>'cards', 'f_residencial'=>$f_residencial]); ?>" class="tb-btn <?php echo $vista==='cards'?'on':'';?>">📇</a>
+        <a href="?<?php echo http_build_query(['vista'=>'tabla', 'f_residencial'=>$f_residencial]); ?>" class="tb-btn <?php echo $vista==='tabla'?'on':'';?>">📋</a>
+        <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Oscuro</button>
+        <a href="?<?php echo http_build_query(array_merge($_GET,['export'=>'csv']));?>" class="tb-btn">⬇ CSV</a>
     </div>
 </header>
 
@@ -427,10 +465,7 @@ canvas{max-height:200px;width:100%}
 <aside class="sidebar" id="sidebar">
     <div class="sb-sec">
         <div class="sb-lbl">Estado</div>
-        <a href="?<?php echo http_build_query(['vista'=>$vista, 'f_residencial'=>$f_residencial, 'f_estado'=>'', 'f_prior'=>'', 'p'=>'']); ?>" class="sb-item <?php if(!$f_estado&&!$f_prior) echo 'on';?>">
-            <span class="sb-item-l">📋 Activos</span>
-            <span class="sb-n n-b"><?php echo $stats_filtrados['pendiente']+$stats_filtrados['proceso'];?></span>
-        </a>
+        
         <a href="?<?php echo http_build_query(['vista'=>$vista, 'f_residencial'=>$f_residencial, 'f_estado'=>'Pendiente', 'p'=>'']); ?>" class="sb-item <?php if($f_estado==='Pendiente') echo 'on';?>">
             <span class="sb-item-l">🔴 Pendientes</span>
             <span class="sb-n n-r"><?php echo $stats_filtrados['pendiente'];?></span>
@@ -622,11 +657,11 @@ if($res && $res->num_rows > 0){
 <div class="tabla-vista">
 <table>
 <thead>
-<tr><th>ID</th><th>Fecha</th><th>Remitente</th><th>Descripción</th><th>Categoría</th><th>Prioridad</th><th>Nivel</th><th>Tipo</th><th>Estado</th><th>Técnico</th><th></th></tr>
+<tr><th>ID</th><th>Fecha</th><th>Residencial</th><th>Remitente</th><th>Descripción</th><th>Categoría</th><th>Prioridad</th><th>Nivel</th><th>Tipo</th><th>Estado</th><th>Técnico</th><th></th></tr>
 </thead>
 <tbody>
 <?php if(!empty($reportes_data)): foreach($reportes_data as $row): $urg=($row['prioridad']??'Normal')==='Urgente'; ?>
-<tr<?php echo $urg?' class="urgente"':'';?>><td><?php echo $row['id'];?></td><td><?php echo date('d/m H:i',strtotime($row['fecha']));?></td><td><?php echo htmlspecialchars($row['remitente']);?></td><td><?php echo htmlspecialchars(substr($row['descripcion']??'',0,40));?></td><td><?php echo $row['categoria'];?></td><td><?php echo $urg?'🚨 Urgente':'Normal';?></td><td><?php echo $row['nivel_urgencia']??'-';?></td><td><?php echo $row['tipo_reporte']??'Incidencia';?></td><td><span class="badge-estado badge-<?php echo $row['estatus']==='Pendiente'?'pend':($row['estatus']==='En Proceso'?'proc':'done');?>"><?php echo $row['estatus'];?></span></td><td><?php echo htmlspecialchars($row['tecnico_asignado']??'—');?></td>
+<tr<?php echo $urg?' class="urgente"':'';?>><td style='font-family:monospace;font-size:11px'><?php echo $row['id'];?></td><td><?php echo date('d/m H:i',strtotime($row['fecha']));?></td><td style='font-size:11px;color:var(--accent);font-weight:600'><?php echo htmlspecialchars($row['residencial']??'—');?></td><td><?php echo htmlspecialchars($row['remitente']);?></td><td><?php echo htmlspecialchars(substr($row['descripcion']??'',0,40));?></td><td><?php echo $row['categoria'];?></td><td><?php echo $urg?'🚨 Urgente':'Normal';?></td><td><?php echo $row['nivel_urgencia']??'-';?></td><td><?php echo $row['tipo_reporte']??'Incidencia';?></td><td><span class="badge-estado badge-<?php echo $row['estatus']==='Pendiente'?'pend':($row['estatus']==='En Proceso'?'proc':'done');?>"><?php echo $row['estatus'];?></span></td><td><?php echo htmlspecialchars($row['tecnico_asignado']??'—');?></td>
 <td><button class="btn-s" style="padding:4px 6px" onclick="openM(<?php echo $row['id'];?>)">Ver</button></td>
 </tr>
 <?php endforeach; else: ?><tr><td colspan="11" style="text-align:center">Sin resultados</td></tr><?php endif; ?>
@@ -657,6 +692,7 @@ if($res && $res->num_rows > 0){
         </div>
         <div class="ctime"><?php echo $row['fecha']?date('d/m H:i',strtotime($row['fecha'])):'—';?></div>
     </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px;margin-bottom:4px"><span style="font-family:monospace;font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 6px;border-radius:4px">#<?php echo $id;?></span><?php if(!empty($row["residencial"])): ?><span style="font-size:10px;font-weight:700;color:var(--accent)"><?php echo htmlspecialchars($row["residencial"]);?></span><?php endif;?></div>
     <div class="cb">
         <div class="cname"><?php echo htmlspecialchars($row['remitente']?:'Sin remitente');?></div>
         <?php if(!empty($row['tecnico_asignado'])): ?>
@@ -699,7 +735,7 @@ if($res && $res->num_rows > 0){
 <?php endif; ?>
 
 <?php if(!empty($reportes_data)): foreach($reportes_data as $row): $id=(int)$row['id']; ?>
-<div class="ov" id="m<?php echo $id;?>" onclick="if(event.target===this)closeM(<?php echo $id;?>)"><div class="modal"><div class="mh"><div class="mt">Reporte #<?php echo $id;?> — <?php echo htmlspecialchars($row['categoria']);?></div><button class="mx" onclick="closeM(<?php echo $id;?>)">✕</button></div><div class="mb"><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px"><div><div class="fl">Remitente</div><div class="fv" style="background:var(--bg4)"><?php echo htmlspecialchars($row['remitente']??'—');?></div></div><div><div class="fl">Fecha</div><div class="fv" style="background:var(--bg4)"><?php echo $row['fecha']?date('d/m/Y H:i',strtotime($row['fecha'])):'—';?></div></div></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px"><div><div class="fl">Nivel urgencia</div><div class="fv" style="background:var(--bg4)"><?php echo $row['nivel_urgencia'] ?? 'No especificado';?></div></div><div><div class="fl">Tipo reporte</div><div class="fv" style="background:var(--bg4)"><?php echo $row['tipo_reporte'] ?? 'Incidencia';?></div></div></div><div class="fl">Descripción</div><div class="fv" style="background:var(--bg4); margin-bottom:14px"><?php echo nl2br(htmlspecialchars($row['descripcion']??'(sin texto)'));?></div><?php if(!empty($row['foto_url'])||!empty($row['evidencia_cierre_url'])): ?><div class="fl">Imágenes</div><div class="mig" style="margin-bottom:14px"><?php if(!empty($row['foto_url'])): ?><div><div class="fl" style="margin-bottom:4px">Inicial</div><a href="<?php echo htmlspecialchars($row['foto_url']);?>" target="_blank"><img src="<?php echo htmlspecialchars($row['foto_url']);?>" style="max-height:80px"></a></div><?php endif; ?><?php if(!empty($row['evidencia_cierre_url'])): ?><div><div class="fl" style="margin-bottom:4px">Cierre</div><a href="<?php echo htmlspecialchars($row['evidencia_cierre_url']);?>" target="_blank"><img src="<?php echo htmlspecialchars($row['evidencia_cierre_url']);?>" style="max-height:80px"></a></div><?php endif; ?></div><?php endif; ?><?php if($row['estatus']==='Terminado'&&!empty($row['observaciones_cierre'])): ?><div class="fl">Cierre — <?php echo htmlspecialchars($row['nombre_tecnico']??'');?></div><div class="fv" style="background:var(--success-l);color:var(--success); margin-bottom:14px"><?php echo htmlspecialchars($row['observaciones_cierre']);?></div><?php endif; ?><?php if(can('edit')): ?><div style="border-top:1px solid var(--border); padding-top:14px; margin-top:6px"><div class="fl" style="margin-bottom:8px">✏️ Editar reporte</div><form method="POST" class="modal-edit-form" data-id="<?php echo $id;?>"><input type="hidden" name="id" value="<?php echo $id;?>"><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px"><select name="nuevo_estado" class="fs" style="background:var(--bg2);"><option value="Pendiente" <?php if($row['estatus']==='Pendiente') echo 'selected';?>>🔴 Pendiente</option><option value="En Proceso" <?php if($row['estatus']==='En Proceso') echo 'selected';?>>🟡 En proceso</option><option value="Terminado" <?php if($row['estatus']==='Terminado') echo 'selected';?>>🟢 Terminado</option></select><select name="categoria_manual" class="fs" style="background:var(--bg2);" id="modalCatSelect<?php echo $id;?>"><?php foreach($cats as $c=>$ico): ?><option value="<?php echo $c;?>" <?php if($row['categoria']===$c) echo 'selected';?>><?php echo $ico.' '.$c;?></option><?php endforeach;?></select></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px"><select name="prioridad" class="fs" style="background:var(--bg2);"><option value="Normal" <?php if(($row['prioridad']??'Normal')==='Normal') echo 'selected';?>>Normal</option><option value="Urgente" <?php if(($row['prioridad']??'Normal')==='Urgente') echo 'selected';?>>🚨 Urgente</option></select><select name="tecnico_asignado" class="fs" style="background:var(--bg2);" id="modalTecSelect<?php echo $id;?>"><option value="">-- Seleccionar técnico --</option><?php foreach($tecnicos_lista as $tec): ?><option value="<?php echo htmlspecialchars($tec['nombre']); ?>" <?php echo ($row['tecnico_asignado']??'')===$tec['nombre']?'selected':''; ?> data-especialidad="<?php echo htmlspecialchars($tec['especialidad'] ?? ''); ?>"><?php echo htmlspecialchars($tec['nombre']); ?><?php if(!empty($tec['especialidad'])): ?> (<?php echo htmlspecialchars($tec['especialidad']); ?>)<?php endif; ?></option><?php endforeach; ?></select></div><div class="whatsapp-hint-modal"></div><div id="sugerenciaTecnico<?php echo $id;?>" class="sugerencia-badge" style="display:none; margin-bottom:8px;"></div><button type="submit" name="actualizar_estado" class="bok" style="width:100%; padding:8px">💾 Guardar cambios</button></form><?php if(can('close')&&$row['estatus']!=='Terminado'): ?><div style="margin-top:10px"><button class="bclose" onclick="toggleCModal(<?php echo $id;?>)">✅ Documentar cierre</button><div class="coll" id="colModal<?php echo $id;?>" style="margin-top:8px"><form method="POST" enctype="multipart/form-data"><input type="hidden" name="id" value="<?php echo $id;?>"><select class="fi" onchange="document.querySelector('#obsModal<?php echo $id;?>').value=this.value"><option value="">📋 Plantilla...</option><option value="Se realizó mantenimiento preventivo, equipo funcionando correctamente.">🔧 Mantenimiento preventivo</option><option value="Se reemplazó el componente dañado, sistema operativo.">🔄 Reemplazo de componente</option><option value="Se reinició el sistema, todo ok.">🖥️ Reinicio</option><option value="Se actualizó firmware, pendiente monitoreo.">📦 Actualización</option><option value="Requiere refacción, pendiente cotización.">⏳ Esperando refacción</option></select><input type="text" name="tecnico" class="fi" placeholder="Técnico responsable" required><textarea name="observaciones" id="obsModal<?php echo $id;?>" class="fta" placeholder="Trabajos realizados..."></textarea><input type="file" name="evidencia" class="fi" accept="image/*"><button type="submit" name="finalizar" class="bok" style="width:100%;padding:8px">Cerrar reporte</button></form></div></div><?php endif; ?></div><?php endif; ?></div></div></div>
+<div class="ov" id="m<?php echo $id;?>" onclick="if(event.target===this)closeM(<?php echo $id;?>)"><div class="modal"><div class="mh"><div class="mt">Reporte #<?php echo $id;?> — <?php echo htmlspecialchars($row['categoria']);?></div><button class="mx" onclick="closeM(<?php echo $id;?>)">✕</button></div><div class="mb"><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px"><div><div class="fl">Remitente</div><div class="fv" style="background:var(--bg4)"><?php echo htmlspecialchars($row['remitente']??'—');?></div></div><div><div class="fl">Fecha</div><div class="fv" style="background:var(--bg4)"><?php echo $row['fecha']?date('d/m/Y H:i',strtotime($row['fecha'])):'—';?></div></div></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px"><div><div class="fl">Nivel urgencia</div><div class="fv" style="background:var(--bg4)"><?php echo $row['nivel_urgencia'] ?? 'No especificado';?></div></div><div><div class="fl">Tipo reporte</div><div class="fv" style="background:var(--bg4)"><?php echo $row['tipo_reporte'] ?? 'Incidencia';?></div></div></div><div class="fl">Descripción</div><div class="fv" style="background:var(--bg4);margin-bottom:14px;max-height:200px;overflow-y:auto;white-space:pre-wrap"><?php echo nl2br(htmlspecialchars($row['descripcion']??'(sin texto)'));?></div><?php if(!empty($row["equipo"])): ?><div style="margin-bottom:10px;margin-top:10px"><div class="fl">&#128298; Equipo</div><div class="fv" style="background:var(--bg4);font-weight:600"><?php echo htmlspecialchars($row["equipo"]);?></div></div><?php endif; ?><?php if(!empty($row["residencial"])): ?><div style="margin-bottom:10px"><div class="fl">&#127968; Residencial</div><div class="fv" style="background:var(--bg4)"><?php echo htmlspecialchars($row["residencial"]);?></div></div><?php endif; ?><?php if(!empty($row['foto_url'])||!empty($row['evidencia_cierre_url'])): ?><div class="fl">Imágenes</div><div class="mig" style="margin-bottom:14px"><?php if(!empty($row['foto_url'])): ?><div><div class="fl" style="margin-bottom:4px">Inicial</div><a href="<?php echo htmlspecialchars($row['foto_url']);?>" target="_blank"><img src="<?php echo htmlspecialchars($row['foto_url']);?>" style="max-height:80px"></a></div><?php endif; ?><?php if(!empty($row['evidencia_cierre_url'])): ?><div><div class="fl" style="margin-bottom:4px">Cierre</div><a href="<?php echo htmlspecialchars($row['evidencia_cierre_url']);?>" target="_blank"><img src="<?php echo htmlspecialchars($row['evidencia_cierre_url']);?>" style="max-height:80px"></a></div><?php endif; ?></div><?php endif; ?><?php if($row['estatus']==='Terminado'&&!empty($row['observaciones_cierre'])): ?><div class="fl">Cierre — <?php echo htmlspecialchars($row['nombre_tecnico']??'');?></div><div class="fv" style="background:var(--success-l);color:var(--success); margin-bottom:14px"><?php echo htmlspecialchars($row['observaciones_cierre']);?></div><?php endif; ?><?php if(can('edit')): ?><div style="border-top:1px solid var(--border); padding-top:14px; margin-top:6px"><div class="fl" style="margin-bottom:8px">✏️ Editar reporte</div><form method="POST" class="modal-edit-form" data-id="<?php echo $id;?>"><input type="hidden" name="id" value="<?php echo $id;?>"><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px"><select name="nuevo_estado" class="fs" style="background:var(--bg2);"><option value="Pendiente" <?php if($row['estatus']==='Pendiente') echo 'selected';?>>🔴 Pendiente</option><option value="En Proceso" <?php if($row['estatus']==='En Proceso') echo 'selected';?>>🟡 En proceso</option><option value="Terminado" <?php if($row['estatus']==='Terminado') echo 'selected';?>>🟢 Terminado</option></select><select name="categoria_manual" class="fs" style="background:var(--bg2);" id="modalCatSelect<?php echo $id;?>"><?php foreach($cats as $c=>$ico): ?><option value="<?php echo $c;?>" <?php if($row['categoria']===$c) echo 'selected';?>><?php echo $ico.' '.$c;?></option><?php endforeach;?></select></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px"><select name="prioridad" class="fs" style="background:var(--bg2);"><option value="Normal" <?php if(($row['prioridad']??'Normal')==='Normal') echo 'selected';?>>Normal</option><option value="Urgente" <?php if(($row['prioridad']??'Normal')==='Urgente') echo 'selected';?>>🚨 Urgente</option></select><select name="tecnico_asignado" class="fs" style="background:var(--bg2);" id="modalTecSelect<?php echo $id;?>"><option value="">-- Seleccionar técnico --</option><?php foreach($tecnicos_lista as $tec): ?><option value="<?php echo htmlspecialchars($tec['nombre']); ?>" <?php echo ($row['tecnico_asignado']??'')===$tec['nombre']?'selected':''; ?> data-especialidad="<?php echo htmlspecialchars($tec['especialidad'] ?? ''); ?>"><?php echo htmlspecialchars($tec['nombre']); ?><?php if(!empty($tec['especialidad'])): ?> (<?php echo htmlspecialchars($tec['especialidad']); ?>)<?php endif; ?></option><?php endforeach; ?></select></div><div class="whatsapp-hint-modal"></div><div id="sugerenciaTecnico<?php echo $id;?>" class="sugerencia-badge" style="display:none; margin-bottom:8px;"></div><button type="submit" name="actualizar_estado" class="bok" style="width:100%; padding:8px">💾 Guardar cambios</button></form><?php if(can('close')&&$row['estatus']!=='Terminado'): ?><div style="margin-top:10px"><button class="bclose" onclick="toggleCModal(<?php echo $id;?>)">✅ Documentar cierre</button><div class="coll" id="colModal<?php echo $id;?>" style="margin-top:8px"><form method="POST" enctype="multipart/form-data"><input type="hidden" name="id" value="<?php echo $id;?>"><select class="fi" onchange="document.querySelector('#obsModal<?php echo $id;?>').value=this.value"><option value="">📋 Plantilla...</option><option value="Se realizó mantenimiento preventivo, equipo funcionando correctamente.">🔧 Mantenimiento preventivo</option><option value="Se reemplazó el componente dañado, sistema operativo.">🔄 Reemplazo de componente</option><option value="Se reinició el sistema, todo ok.">🖥️ Reinicio</option><option value="Se actualizó firmware, pendiente monitoreo.">📦 Actualización</option><option value="Requiere refacción, pendiente cotización.">⏳ Esperando refacción</option></select><input type="text" name="tecnico" class="fi" placeholder="Técnico responsable" required><textarea name="observaciones" id="obsModal<?php echo $id;?>" class="fta" placeholder="Trabajos realizados..."></textarea><input type="file" name="evidencia" class="fi" accept="image/*"><button type="submit" name="finalizar" class="bok" style="width:100%;padding:8px">Cerrar reporte</button></form></div></div><?php endif; ?></div><?php endif; ?></div></div></div>
 <?php endforeach; endif; ?>
 
 <!-- Modal para reporte personalizado -->
@@ -771,7 +807,7 @@ const catData=<?php echo json_encode(array_column($categorias_stats,'count')); ?
 const totalCat=catData.reduce((a,b)=>a+b,0);
 if(catLabels.length){
     new Chart(document.getElementById('chartCategorias'),{
-        type:'pie',
+        type:'doughnut',
         data:{labels:catLabels,datasets:[{data:catData,backgroundColor:['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed'],borderWidth:0}]},
         options:{
             responsive:true,
@@ -907,7 +943,7 @@ const urgentes=<?php echo $stats_filtrados['urgente'];?>;if(urgentes>0)document.
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(e=>console.log('SW error:',e));
 
 let lastCount=<?php echo $initial_total; ?>;
-setInterval(()=>{fetch('verificar_nuevos_reports.php').then(r=>r.json()).then(data=>{if(data.total>lastCount){const nuevos=data.total-lastCount;toast(`📢 ${nuevos} nuevo(s) reporte(s)`);if('Notification' in window&&Notification.permission==='granted'){new Notification('Commune',{body:`${nuevos} nuevo(s) reporte(s)`,icon:'icons/icon-192.png'});}lastCount=data.total;fetch('?get_urgent_count=1').then(r=>r.json()).then(urg=>{if(urg>0)document.title=`(${urg}) Commune`;else document.title='Commune — Gestión Cancún';});}});},15000);
+setInterval(()=>{fetch('verificar_nuevos_reports.php?desde='+encodeURIComponent(new Date().toISOString().replace('T',' ').substring(0,19))).then(r=>r.json()).then(data=>{if(data.total>lastCount){const nuevos=data.total-lastCount;toast(`📢 ${nuevos} nuevo(s) reporte(s)`);if('Notification' in window&&Notification.permission==='granted'){new Notification('Commune',{body:`${nuevos} nuevo(s) reporte(s)`,icon:'icons/icon-192.png'});}lastCount=data.total;fetch('?get_urgent_count=1').then(r=>r.json()).then(urg=>{if(urg>0)document.title=`(${urg}) Commune`;else document.title='Commune — Gestión Cancún';});}});},15000);
 if('Notification' in window&&Notification.permission!=='granted'&&Notification.permission!=='denied'){setTimeout(()=>Notification.requestPermission(),5000);}
 
 document.addEventListener('change',(e)=>{if(e.target.name==='tecnico_asignado'&&e.target.closest('.modal')){const opt=e.target.options[e.target.selectedIndex];const wa=opt.getAttribute('data-whatsapp');const p=e.target.closest('.mb');if(p){let h=p.querySelector('.whatsapp-hint-modal');if(h){if(wa)h.innerHTML=`📱 WhatsApp: ${wa}`;else h.innerHTML='';}}}});
@@ -919,6 +955,26 @@ async function marcarComunicadosLeidos(){try{await fetch('obtener_comunicados.ph
 function escapeHtml(t){if(!t)return '';const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
 function iniciarPollingComunicados(){setInterval(()=>{cargarComunicados();},15000);}
 document.addEventListener('DOMContentLoaded',()=>{cargarTecnicos();cargarComunicados();iniciarPollingComunicados();});
+</script>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('commune_theme');
+  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var theme = saved || (prefersDark ? 'dark' : 'light');
+  if(theme === 'dark') document.documentElement.setAttribute('data-theme','dark');
+  var btn = document.getElementById('themeBtn');
+  if(btn) btn.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Oscuro';
+})();
+function toggleTheme(){
+  var cur = document.documentElement.getAttribute('data-theme');
+  var next = cur === 'dark' ? 'light' : 'dark';
+  if(next === 'dark') document.documentElement.setAttribute('data-theme','dark');
+  else document.documentElement.removeAttribute('data-theme');
+  localStorage.setItem('commune_theme', next);
+  var btn = document.getElementById('themeBtn');
+  if(btn) btn.textContent = next === 'dark' ? '☀️ Claro' : '🌙 Oscuro';
+}
 </script>
 </body>
 </html>
