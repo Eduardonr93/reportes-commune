@@ -4,6 +4,7 @@ const axios = require('axios');
 const fs = require('fs');
 const mysql = require('mysql2/promise');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const moment = require('moment-timezone');
 
 // ── CONFIGURACIÓN ─────────────────────────────────────────
 const GEMINI_API_KEY     = 'AIzaSyDK1I5GqiRXVzSNViGyvpSlASoh0U1MLZ4';
@@ -18,21 +19,19 @@ const MAX_REINTENTOS_IA  = 3;
 
 // ── NÚMEROS ───────────────────────────────────────────────
 const EQUIPO_COMMUNE = [
-    '5219984251214@c.us',  // Eduardo
+    '5219986225720@c.us',  // Eduardo
     '5219983067953@c.us',  // Edgar
     '5219994467961@c.us'   // Yanet
 ];
-const NUMERO_EDUARDO = '5219984251214@c.us';
+const NUMERO_EDUARDO = '5219986225720@c.us';
 const NUMERO_YANET   = '5219994467961@c.us';
-const NUMERO_ANGEL  = '5219981576540@c.us';
+const NUMERO_ANGEL   = '5219981576540@c.us';
 
 const TECNICOS_NUMEROS = {
-    'Edgar':   '5219983067953@c.us',
-    'Martin':  '',
-    'Eduardo': '5219984251214@c.us',
+    'Francisci':   '5219982166693@c.us',
+    'Martin':      '5219981461823@c.us',
+    'Eduardo':     '5219984251214@c.us',
 };
-
-const RESUMEN_HORA = 9;
 
 // ── DB CONFIG ─────────────────────────────────────────────
 const DB_CONFIG = {
@@ -81,6 +80,8 @@ function guardarTimestamp(ts) {
 }
 
 let ultimoTimestamp = cargarTimestamp();
+let resumenEnviado = false;
+let resumenEnviadoHoy = '';
 
 // ── Procesados en MySQL ───────────────────────────────────
 async function esMensajeProcesado(msgId) {
@@ -265,15 +266,19 @@ async function notificarTecnicoAsignado(tecnicoNombre, reporteId, residencial, c
     }
 }
 
-// ── RESUMEN DIARIO ────────────────────────────────────────
-let resumenEnviadoHoy = false;
-
+// ── RESUMEN DIARIO (CORREGIDO: HORA CANCÚN 8:00 AM) ───────
 async function enviarResumenDiario() {
-    const ahora = new Date();
-    const hora  = ahora.getHours();
-    if (hora === 0) resumenEnviadoHoy = false;
-    if (hora !== RESUMEN_HORA || resumenEnviadoHoy) return;
-    resumenEnviadoHoy = true;
+    const ahoraCancun = moment().tz('America/Cancun');
+    const horaCancun = ahoraCancun.hours();
+    const fechaHoy = ahoraCancun.format('YYYY-MM-DD');
+    
+    if (resumenEnviadoHoy !== fechaHoy) {
+        resumenEnviadoHoy = fechaHoy;
+        resumenEnviado = false;
+    }
+    
+    if (horaCancun !== 8 || resumenEnviado) return;
+    resumenEnviado = true;
 
     let db;
     try {
@@ -292,15 +297,12 @@ async function enviarResumenDiario() {
             WHERE estatus IN ('Pendiente', 'En Proceso') AND prioridad='Urgente'
         `);
 
-        const ayer    = new Date(); ayer.setDate(ayer.getDate() - 1);
-        const ayerStr = ayer.toISOString().split('T')[0];
+        const ayer = moment().tz('America/Cancun').subtract(1, 'days').format('YYYY-MM-DD');
         const [cerradosAyer] = await db.query(
-            "SELECT COUNT(*) as total FROM reportes WHERE DATE(fecha_terminado)=?", [ayerStr]
+            "SELECT COUNT(*) as total FROM reportes WHERE DATE(fecha_terminado)=?", [ayer]
         );
 
-        // Top equipos con más fallas este mes
-        const mesIni = new Date(); mesIni.setDate(1);
-        const mesIniStr = mesIni.toISOString().split('T')[0];
+        const mesIni = moment().tz('America/Cancun').startOf('month').format('YYYY-MM-DD');
         const [topEquipos] = await db.query(`
             SELECT equipo, COUNT(*) as fallas
             FROM reportes
@@ -308,13 +310,15 @@ async function enviarResumenDiario() {
             GROUP BY equipo
             ORDER BY fallas DESC
             LIMIT 3
-        `, [mesIniStr]);
+        `, [mesIni]);
 
+        const fechaLegible = ahoraCancun.format('DD/MM/YYYY');
+        
         if (rows.length === 0 && urgentes[0].total === 0) {
-            const msg = `☀️ *RESUMEN DIARIO — ${ahora.toLocaleDateString('es-MX')}*\n\n✅ Sin reportes pendientes. Todo al día.`;
+            const msg = `☀️ *RESUMEN DIARIO — ${fechaLegible}*\n\n✅ Sin reportes pendientes. Todo al día.`;
             await client.sendMessage(NUMERO_EDUARDO, msg);
             await client.sendMessage(NUMERO_YANET, msg);
-	    await client.sendMessage(NUMERO_ANGEL, msg);
+            await client.sendMessage(NUMERO_ANGEL, msg);
             return;
         }
 
@@ -325,7 +329,7 @@ async function enviarResumenDiario() {
             porResidencial[res].push(`  • ${row.categoria || 'General'}: ${row.total}`);
         }
 
-        let resumen = `☀️ *RESUMEN DIARIO — ${ahora.toLocaleDateString('es-MX')}*\n\n`;
+        let resumen = `☀️ *RESUMEN DIARIO — ${fechaLegible}*\n\n`;
         resumen += `📊 *Reportes pendientes por comunidad:*\n`;
 
         for (const [res, cats] of Object.entries(porResidencial)) {
@@ -346,12 +350,12 @@ async function enviarResumenDiario() {
 
         await client.sendMessage(NUMERO_EDUARDO, resumen);
         await client.sendMessage(NUMERO_YANET, resumen);
-	await client.sendMessage(NUMERO_ANGEL, resumen);
-        console.log('📊 Resumen diario enviado a Eduardo, Yanet y Angel');
+        await client.sendMessage(NUMERO_ANGEL, resumen);
+        console.log(`📊 Resumen diario enviado a las ${horaCancun}:00 (hora Cancún)`);
 
     } catch(e) {
         console.error('Error resumen diario:', e.message);
-        resumenEnviadoHoy = false;
+        resumenEnviado = false;
     } finally {
         if (db) await db.end();
     }
@@ -474,7 +478,7 @@ async function enviarComunicadoInterno(msg, remitente, numero) {
 
 async function enviarReporteNormal(msg, remitente, grupo) {
     try {
-        let fotoBase64 = '';
+        let fotoBase64 = "";
         if (msg.hasMedia && msg.type !== "video") {
             try {
                 const media = await msg.downloadMedia();
@@ -482,27 +486,50 @@ async function enviarReporteNormal(msg, remitente, grupo) {
             } catch(e) {}
         }
         const params = new URLSearchParams();
-        params.append('texto', msg.body || '');
-        params.append('usuario', remitente);
-        params.append('fecha', fechaMySQL(msg.timestamp));
-        params.append('imagen_base64', fotoBase64);
+        params.append("texto", msg.body || "");
+        params.append("usuario", remitente);
+        params.append("fecha", fechaMySQL(msg.timestamp));
+        params.append("imagen_base64", fotoBase64);
         const res = await axios.post(URL_REPORTES, params, { timeout: 20000 });
-        const respuesta = res.data?.trim() || '';
-
-        if (respuesta === 'SIN_EQUIPO') {
-            console.log(`⚠️ Reporte rechazado — falta campo Equipo`);
+        const respuesta = res.data?.trim() || "";
+        
+        if (respuesta === "SIN_EQUIPO") {
+            console.log("⚠️ Reporte rechazado — falta campo Equipo");
             await msg.reply(PLANTILLA_RECORDATORIO);
-        } else if (respuesta.startsWith('OK:')) {
-            const id = respuesta.split(':')[1];
-            console.log(`📋 Reporte guardado: #${id}`);
-            await msg.reply(`✅ *Reporte #${id} registrado correctamente.*\nEn breve será asignado a un técnico.\n🔗 https://crm.commune.com.mx/reportes/`);
-        } else if (respuesta === 'DUPLICADO') {
-            console.log(`⏭️ Reporte duplicado ignorado`);
+        } else if (respuesta === "SIN_CATEGORIA") {
+            console.log("⚠️ Reporte rechazado — falta campo Categoría");
+            await msg.reply(PLANTILLA_RECORDATORIO);
+        } else if (respuesta.startsWith("OK_CORREGIDO:")) {
+            const id = respuesta.split(":")[1];
+            console.log("📋 Reporte #" + id + " guardado con formato corregido");
+            await msg.reply(
+                "✅ *Reporte #" + id + " registrado.*\n\n" +
+                "⚠️ *Formato incorrecto detectado* — el sistema corrigió los campos automáticamente esta vez, " +
+                "pero por favor usa la plantilla oficial para que el reporte llegue completo y sin demoras:\n\n" +
+                "🔧 *REPORTE*\n" +
+                "📍 Residencial: [RIO / Cumbres / Via Cumbres / Aqua / Palmaris / Arbolada / Altai / Kyra / Monte Athos]\n" +
+                "📂 Categoría: [CCTV / Redes / Perímetro / Accesos / Alarma]\n" +
+                "🔩 Equipo: (ej: Barrera CAME GT4 / Cámara Hikvision / Lector Nedap)\n" +
+                "🗺️ Ubicación: (ej: Caseta 1 entrada / Zona norte)\n" +
+                "📋 Tipo: [Incidencia / Preventivo / Mantenimiento]\n" +
+                "🚨 Urgencia: [Nivel 1 - Crítico / Nivel 2 - Moderado / Nivel 3 - Leve]\n" +
+                "📝 Descripción: (qué pasó exactamente)\n" +
+                "👤 Reporta: (nombre y cargo)\n\n" +
+                "📖 Guía completa: https://crm.commune.com.mx/reportes/guia-commune.html"
+            );
+        } else if (respuesta.startsWith("OK:")) {
+            const id = respuesta.split(":")[1];
+            console.log("📋 Reporte #" + id + " guardado correctamente");
+            await msg.reply("✅ *Reporte #" + id + " registrado.*\n🔗 https://crm.commune.com.mx/reportes/");
+        } else if (respuesta === "DUPLICADO") {
+            console.log("⏭️ Reporte duplicado ignorado");
+        } else if (respuesta === "VACIO") {
+            console.log("⏭️ Mensaje vacío ignorado");
         } else {
-            console.log(`📋 Reporte guardado: ${respuesta.slice(0,50)}`);
+            console.log("📋 Respuesta inesperada: " + respuesta.slice(0,50));
         }
     } catch(e) {
-        console.error('Error reporte:', e.message);
+        console.error("Error reporte:", e.message);
     }
 }
 
@@ -633,7 +660,7 @@ client.on('ready', async () => {
     console.log(`📋 Grupo: ${NOMBRE_GRUPO}`);
     console.log(`👥 Equipo Commune: ${EQUIPO_COMMUNE.length} números`);
     console.log(`🔄 Intervalo: ${INTERVALO_SEGUNDOS}s`);
-    console.log(`📊 Resumen diario: ${RESUMEN_HORA}:00 AM → Eduardo + Yanet`);
+    console.log(`📊 Resumen diario: 8:00 AM (hora Cancún) → Eduardo + Yanet + Ángel`);
     console.log(`🔩 Plantilla obligatoria: campo Equipo requerido`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
