@@ -1,0 +1,8 @@
+uploads/
+*.lock
+*.log
+*.save
+*.save.*
+"index (Copiar*"
+cgi-bin/
+Reporte/
